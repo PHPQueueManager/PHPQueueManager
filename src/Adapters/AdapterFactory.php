@@ -1,16 +1,12 @@
 <?php
-
 namespace PHPQueueManager\PHPQueueManager\Adapters;
-
-use PHPQueueManager\PHPQueueManager\Adapters\Kafka\KafkaAdapter;
-use PHPQueueManager\PHPQueueManager\Adapters\RabbitMQ\RabbitMQAdapter;
 
 class AdapterFactory
 {
 
     protected const MAPS = [
-        'rabbitmq'          => RabbitMQAdapter::class,
-        'kafka'             => KafkaAdapter::class,
+        'rabbitmq'          => "\\PHPQueueManager\\PHPQueueManager\\Adapters\\RabbitMQ\\RabbitMQAdapter",
+        'kafka'             => "\\PHPQueueManager\\PHPQueueManager\\Adapters\\Kafka\\KafkaAdapter",
     ];
 
     /**
