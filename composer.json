@@ -1,7 +1,7 @@
 {
     "name": "phpqueuemanager/php-queue-manager",
     "description": "PHP Work Queue Manager",
-    "type": "project",
+    "type": "library",
     "license": "MIT",
     "autoload": {
         "psr-4": {

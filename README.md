@@ -7,6 +7,22 @@ composer require phpqueuemanager/php-queue-manager
 ```
 You can find a starter project based on this package here.
 
+### Adapter Requires
+
+#### RabbitMQ
+
+- [https://pecl.php.net/package/amqp](https://pecl.php.net/package/amqp)
+- Include the `php-amqplib/php-amqplib` package in your project.
+
+```
+composer require php-amqplib/php-amqplib
+```
+
+#### Kafka
+
+- [https://pecl.php.net/package/rdkafka](https://pecl.php.net/package/rdkafka)
+- [php.net Documentation](https://arnaud.le-blanc.net/php-rdkafka-doc/phpdoc/rdkafka.setup.html)
+
 ## Getting Help
 
 If you have questions, concerns, bug reports, etc, please file an issue in this repository's Issue Tracker.
