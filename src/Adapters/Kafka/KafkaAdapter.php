@@ -155,13 +155,17 @@ class KafkaAdapter extends AbstractAdapter implements AdapterInterface
     {
         try {
             $message->deadLetterNotification();
-            $producer = new Producer($this->conf);
-            $topic = $producer->newTopic($this->queue->getDLQName());
-            $topic->produce(RD_KAFKA_PARTITION_UA, 0, $message->__toString());
-            $producer->poll(0);
 
-            while ($producer->getOutQLen() > 0) {
-                $producer->poll(50);
+            $deadLetterQueue = $this->queue->getDLQName();
+            if (!empty($deadLetterQueue)) {
+                $producer = new Producer($this->conf);
+                $topic = $producer->newTopic($deadLetterQueue);
+                $topic->produce(RD_KAFKA_PARTITION_UA, 0, $message->__toString());
+                $producer->poll(0);
+
+                while ($producer->getOutQLen() > 0) {
+                    $producer->poll(50);
+                }
             }
         } catch (\Throwable $e) {
         }

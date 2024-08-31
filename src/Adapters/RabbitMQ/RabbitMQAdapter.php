@@ -158,11 +158,16 @@ class RabbitMQAdapter extends AbstractAdapter implements AdapterInterface
     {
         try {
             $message->deadLetterNotification();
-            $msg = new AMQPMessage($message->__toString(), [
-                'delivery_mode'     => AMQPMessage::DELIVERY_MODE_PERSISTENT,
-            ]);
 
-            $this->channel->basic_publish($msg, '', $this->queue->getDLQName());
+            $deadLetterQueue = $this->queue->getDLQName();
+            if (!empty($deadLetterQueue)) {
+                $msg = new AMQPMessage($message->__toString(), [
+                    'delivery_mode'     => AMQPMessage::DELIVERY_MODE_PERSISTENT,
+                ]);
+
+                $this->channel->basic_publish($msg, '', $deadLetterQueue);
+            }
+
         } catch (\Throwable $e) {
         }
     }
