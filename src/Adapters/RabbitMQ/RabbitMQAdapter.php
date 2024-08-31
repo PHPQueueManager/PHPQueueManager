@@ -1,5 +1,4 @@
 <?php
-
 namespace PHPQueueManager\PHPQueueManager\Adapters\RabbitMQ;
 
 use PhpAmqpLib\Channel\AbstractChannel;
