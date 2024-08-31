@@ -6,22 +6,17 @@ use PhpAmqpLib\Channel\AbstractChannel;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
+use PHPQueueManager\PHPQueueManager\Adapters\AbstractAdapter;
 use PHPQueueManager\PHPQueueManager\Adapters\AdapterInterface;
 use PHPQueueManager\PHPQueueManager\Exceptions\DeadLetterQueueException;
 use PHPQueueManager\PHPQueueManager\Exceptions\ReTryQueueException;
+use PHPQueueManager\PHPQueueManager\Queue\JobMessageInterface;
 use PHPQueueManager\PHPQueueManager\Queue\Message;
 use PHPQueueManager\PHPQueueManager\Queue\MessageInterface;
 use PHPQueueManager\PHPQueueManager\Queue\QueueInterface;
 
-class RabbitMQAdapter implements AdapterInterface
+class RabbitMQAdapter extends AbstractAdapter implements AdapterInterface
 {
-
-    protected array $credentials = [
-        'host'          => 'localhost',
-        'port'          => 5672,
-        'username'      => 'guest',
-        'password'      => 'guest',
-    ];
 
     protected AMQPStreamConnection $connection;
 
@@ -29,11 +24,23 @@ class RabbitMQAdapter implements AdapterInterface
 
     private QueueInterface $queue;
 
+
+    /**
+     * @inheritDoc
+     */
     public function __construct(array $credentials)
     {
-        $this->credentials = array_merge($this->credentials, $credentials);
+        parent::__construct(array_merge([
+            'host'          => 'localhost',
+            'port'          => 5672,
+            'username'      => 'guest',
+            'password'      => 'guest',
+        ], $credentials));
     }
 
+    /**
+     * @inheritDoc
+     */
     public function connect(): bool
     {
         try {
@@ -46,6 +53,9 @@ class RabbitMQAdapter implements AdapterInterface
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function queueDeclare(QueueInterface $queue): self
     {
         !isset($this->connection) && $this->connect();
@@ -58,6 +68,9 @@ class RabbitMQAdapter implements AdapterInterface
         return $this;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function publish(MessageInterface $message): bool
     {
         try {
@@ -73,6 +86,9 @@ class RabbitMQAdapter implements AdapterInterface
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function consume(\Closure $worker)
     {
         try {
@@ -80,19 +96,16 @@ class RabbitMQAdapter implements AdapterInterface
             $this->channel->basic_consume($this->queue->getName(), '', false, false, false, false, function ($msg) use ($worker) {
                 $message = Message::create($msg->body);
                 try {
-                    if (!empty($message->ttl) && strtotime($message->ttl) > time()) {
-                        throw new DeadLetterQueueException("It was not processed because the last processing date has passed!");
+                    $res = $this->messageWork($message, $worker);
+
+                    if ($res) {
+                        $this->channel->basic_ack($msg->delivery_info['delivery_tag']);
+                    } else {
+                        $isRetry = $message->try < $message->attempt;
+                        $this->channel->basic_nack($msg->delivery_info['delivery_tag'], false, $isRetry);
+
+                        $isRetry && $message->retryNotification();
                     }
-                    $message->try = $message->try + 1;
-                    $message->attempt_at = date("c");
-
-                    $res = call_user_func_array($worker, [
-                        $message,
-                    ]);
-
-                    $res
-                        ? $this->channel->basic_ack($msg->delivery_info['delivery_tag'])
-                        : $this->channel->basic_nack($msg->delivery_info['delivery_tag'], false, $message->try < $message->attempt);
                 } catch (ReTryQueueException $e) {
                     $message->error = $e->getMessage();
                     $this->channel->basic_nack($msg->delivery_info['delivery_tag']);
@@ -119,6 +132,9 @@ class RabbitMQAdapter implements AdapterInterface
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function close(): bool
     {
         isset($this->channel) && $this->channel->close();
@@ -127,14 +143,22 @@ class RabbitMQAdapter implements AdapterInterface
         return true;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function retry(MessageInterface $message): void
     {
+        $message->retryNotification();
         $this->publish($message);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function addDeadLetterQueue(MessageInterface $message): void
     {
         try {
+            $message->deadLetterNotification();
             $msg = new AMQPMessage($message->__toString(), [
                 'delivery_mode'     => AMQPMessage::DELIVERY_MODE_PERSISTENT,
             ]);

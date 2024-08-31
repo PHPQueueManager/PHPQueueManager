@@ -16,11 +16,17 @@ class Queue implements QueueInterface
         $this->adapter->connect();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function __destruct()
     {
         $this->adapter->close();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getName(): string
     {
         $split = explode("\\", get_called_class());
@@ -28,11 +34,17 @@ class Queue implements QueueInterface
         return strtolower($split[array_key_last($split)]);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getDLQName(): string
     {
         return $this->getName() . '_dlq';
     }
 
+    /**
+     * @inheritDoc
+     */
     public function publish(MessageInterface $message): bool
     {
         return $this->adapter
@@ -40,7 +52,10 @@ class Queue implements QueueInterface
             ->publish($message);
     }
 
-    public function consume(\Closure $worker)
+    /**
+     * @inheritDoc
+     */
+    public function consume(\Closure $worker): void
     {
         $this->adapter
             ->queueDeclare($this)

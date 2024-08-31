@@ -2,6 +2,7 @@
 
 namespace PHPQueueManager\PHPQueueManager\Adapters\Kafka;
 
+use PHPQueueManager\PHPQueueManager\Adapters\AbstractAdapter;
 use PHPQueueManager\PHPQueueManager\Adapters\AdapterInterface;
 use PHPQueueManager\PHPQueueManager\Exceptions\DeadLetterQueueException;
 use PHPQueueManager\PHPQueueManager\Exceptions\ReTryQueueException;
@@ -12,24 +13,28 @@ use RdKafka\Conf;
 use RdKafka\Producer;
 use RdKafka\KafkaConsumer;
 
-class KafkaAdapter implements AdapterInterface
+class KafkaAdapter extends AbstractAdapter implements AdapterInterface
 {
-
-    protected array $credentials = [
-        'bootstrap.servers'         => 'localhost:9092',
-        'group.id'                  => 'PQMConsumerGroup',
-        'metadata.broker.list'      => 'localhost:9092',
-    ];
 
     protected Conf $conf;
 
     protected QueueInterface $queue;
 
+    /**
+     * @inheritDoc
+     */
     public function __construct(array $credentials)
     {
-        $this->credentials = array_merge($this->credentials, $credentials);
+        parent::__construct(array_merge([
+            'bootstrap.servers'         => 'localhost:9092',
+            'group.id'                  => 'PQMConsumerGroup',
+            'metadata.broker.list'      => 'localhost:9092',
+        ], $credentials));
     }
 
+    /**
+     * @inheritDoc
+     */
     public function connect(): bool
     {
         try {
@@ -44,6 +49,9 @@ class KafkaAdapter implements AdapterInterface
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function queueDeclare(QueueInterface $queue): self
     {
         !isset($this->conf) && $this->connect();
@@ -51,6 +59,9 @@ class KafkaAdapter implements AdapterInterface
         return $this;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function publish(MessageInterface $message): bool
     {
         try {
@@ -69,6 +80,9 @@ class KafkaAdapter implements AdapterInterface
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function consume(\Closure $worker)
     {
         try {
@@ -81,16 +95,7 @@ class KafkaAdapter implements AdapterInterface
 
                     $message = Message::create($msg->payload);
                     try {
-                        if (!empty($message->ttl) && strtotime($message->ttl) > time()) {
-                            throw new DeadLetterQueueException("It was not processed because the last processing date has passed!");
-                        }
-                        $message->try = $message->try + 1;
-                        $message->attempt_at = date("c");
-
-                        $res = call_user_func_array($worker, [
-                            $message,
-                        ]);
-
+                        $res = $this->messageWork($message, $worker);
                         if (!$res && $message->try < $message->attempt) {
                             $this->retry($message);
                         }
@@ -126,20 +131,30 @@ class KafkaAdapter implements AdapterInterface
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function close(): bool
     {
         return true;
     }
 
-
+    /**
+     * @inheritDoc
+     */
     public function retry(MessageInterface $message): void
     {
+        $message->retryNotification();
         $this->publish($message);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function addDeadLetterQueue(MessageInterface $message): void
     {
         try {
+            $message->deadLetterNotification();
             $producer = new Producer($this->conf);
             $topic = $producer->newTopic($this->queue->getDLQName());
             $topic->produce(RD_KAFKA_PARTITION_UA, 0, $message->__toString());

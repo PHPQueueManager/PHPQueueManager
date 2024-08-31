@@ -13,6 +13,12 @@ class AdapterFactory
         'kafka'             => KafkaAdapter::class,
     ];
 
+    /**
+     * @param string $adapter
+     * @param array $credentials
+     * @return AdapterInterface
+     * @throws \Exception
+     */
     public static function create(string $adapter, array $credentials): AdapterInterface
     {
         if (isset(self::MAPS[strtolower($adapter)])) {
