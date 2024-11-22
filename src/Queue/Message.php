@@ -11,6 +11,16 @@ use function json_encode;
 use function class_exists;
 use function array_key_exists;
 
+/**
+ * @property string $error
+ * @property array $payload
+ * @property null|int $ttl
+ * @property int $attempt
+ * @property string $attempt_at
+ * @property int $try
+ * @property string $created_at
+ * @property string $class
+ */
 #[\AllowDynamicProperties]
 class Message implements MessageInterface
 {
@@ -54,6 +64,14 @@ class Message implements MessageInterface
     public function __get(string $name)
     {
         return $this->properties[$name] ?? null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function __isset(string $name): bool
+    {
+        return isset($this->properties[$name]);
     }
 
     /**
