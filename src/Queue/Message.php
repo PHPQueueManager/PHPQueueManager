@@ -4,6 +4,13 @@ namespace PHPQueueManager\PHPQueueManager\Queue;
 
 use PHPQueueManager\PHPQueueManager\Queue\MessageInterface;
 
+use function date;
+use function get_called_class;
+use function json_decode;
+use function json_encode;
+use function class_exists;
+use function array_key_exists;
+
 #[\AllowDynamicProperties]
 class Message implements MessageInterface
 {
@@ -16,12 +23,12 @@ class Message implements MessageInterface
         'try'           => 0,
         'created_at'    => null,
         'class'         => null,
+        'error'         => null,
     ];
 
     public function __construct()
     {
         $this->properties['created_at'] = date("c");
-        $this->properties['class'] = Message::class;
     }
 
     /**
@@ -29,6 +36,7 @@ class Message implements MessageInterface
      */
     public function __toString(): string
     {
+        $this->properties['class'] = get_called_class();
         return json_encode($this->properties);
     }
 
@@ -37,7 +45,7 @@ class Message implements MessageInterface
      */
     public function __set(string $name, $value): void
     {
-        $this->properties[$name] = $value;
+        array_key_exists($name, $this->properties) && $this->properties[$name] = $value;
     }
 
     /**
