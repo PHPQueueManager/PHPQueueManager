@@ -7,6 +7,7 @@ class AdapterFactory
     protected const MAPS = [
         'rabbitmq'          => "\\PHPQueueManager\\PHPQueueManager\\Adapters\\RabbitMQ\\RabbitMQAdapter",
         'kafka'             => "\\PHPQueueManager\\PHPQueueManager\\Adapters\\Kafka\\KafkaAdapter",
+        'redis'             => "\\PHPQueueManager\\PHPQueueManager\\Adapters\\Redis\\RedisAdapter",
     ];
 
     /**
