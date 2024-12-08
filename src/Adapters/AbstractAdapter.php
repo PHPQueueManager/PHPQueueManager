@@ -14,6 +14,12 @@ abstract class AbstractAdapter implements AdapterInterface
     protected array $credentials;
 
     /**
+     * @var QueueInterface
+     * @see self::queueDeclare()
+     */
+    protected QueueInterface $queue;
+
+    /**
      * @inheritDoc
      */
     public function __construct(array $credentials)

@@ -21,8 +21,6 @@ class RabbitMQAdapter extends AbstractAdapter implements AdapterInterface
 
     protected AbstractChannel|AMQPChannel $channel;
 
-    private QueueInterface $queue;
-
 
     /**
      * @inheritDoc

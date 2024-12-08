@@ -18,8 +18,6 @@ class KafkaAdapter extends AbstractAdapter implements AdapterInterface
 
     protected Conf $conf;
 
-    protected QueueInterface $queue;
-
     /**
      * @inheritDoc
      */

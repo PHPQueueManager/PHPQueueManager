@@ -17,8 +17,6 @@ class RedisAdapter extends AbstractAdapter implements AdapterInterface
 
     private \Redis $redis;
 
-    private QueueInterface $queue;
-
     public function __construct(array $credentials)
     {
         parent::__construct(array_merge([
