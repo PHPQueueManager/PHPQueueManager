@@ -25,6 +25,8 @@ use function array_key_exists;
 class Message implements MessageInterface
 {
 
+    public $id;
+
     protected array $properties = [
         'payload'       => [],
         'ttl'           => null,
