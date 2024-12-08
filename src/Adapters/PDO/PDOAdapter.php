@@ -74,9 +74,10 @@ class PDOAdapter extends AbstractAdapter implements AdapterInterface
     public function publish(MessageInterface $message): bool
     {
         try {
-            $stmt = $this->pdo->prepare("INSERT INTO " . $this->tableName . " (message, ttl, attempt, attempt_at, try, created_at, status) VALUES (:message, :ttl, :attempt, :attempt_at, :try, :created_at, :status)");
+            $stmt = $this->pdo->prepare("INSERT INTO " . $this->tableName . " (queue, message, ttl, attempt, attempt_at, try, created_at, status) VALUES (:queue, :message, :ttl, :attempt, :attempt_at, :try, :created_at, :status)");
 
             return $stmt->execute([
+                ':queue'                => $this->queue->getName(),
                 ':message'              => $message->__toString(),
                 ':ttl'                  => $message->ttl,
                 ':attempt'              => $message->attempt,
@@ -99,8 +100,10 @@ class PDOAdapter extends AbstractAdapter implements AdapterInterface
             while (true) {
                 $this->pdo->beginTransaction();
 
-                $stmt = $this->pdo->prepare("SELECT * FROM " . $this->tableName . " WHERE status = '0' ORDER BY attempt ASC, id ASC LIMIT 1 FOR UPDATE");
-                $stmt->execute();
+                $stmt = $this->pdo->prepare("SELECT * FROM " . $this->tableName . " WHERE status = '0' AND queue = :queue ORDER BY attempt ASC, id ASC LIMIT 1 FOR UPDATE");
+                $stmt->execute([
+                    ':queue'            => $this->queue->getName(),
+                ]);
 
                 $msg = $stmt->fetch(\PDO::FETCH_ASSOC);
 
