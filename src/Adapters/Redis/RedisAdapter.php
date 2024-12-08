@@ -108,10 +108,12 @@ class RedisAdapter extends AbstractAdapter implements AdapterInterface
                             $message->error = $e->getMessage();
                             $this->redis->xAck($stream, $group, [$id]);
                             $this->retry($message);
+                            $this->queue->report($e);
                         } catch (DeadLetterQueueException $e) {
                             $message->error = $e->getMessage();
                             $this->redis->xAck($stream, $group, [$id]);
                             $this->addDeadLetterQueue($message);
+                            $this->queue->report($e);
                         } catch (\Throwable $e) {
                             $message->error = $e->getMessage();
                             $this->redis->xAck($stream, $group, [$id]);
@@ -120,11 +122,13 @@ class RedisAdapter extends AbstractAdapter implements AdapterInterface
                             } else {
                                 $this->addDeadLetterQueue($message);
                             }
+                            $this->queue->report($e);
                         }
                     }
                 }
             }
         } catch (\Throwable $e) {
+            throw $e;
         }
     }
 

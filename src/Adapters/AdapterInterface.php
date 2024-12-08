@@ -33,6 +33,7 @@ interface AdapterInterface
     /**
      * @param \Closure $worker
      * @return mixed
+     * @throws \Throwable
      */
     public function consume(\Closure $worker);
 

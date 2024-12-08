@@ -64,19 +64,26 @@ abstract class AbstractAdapter implements AdapterInterface
      */
     protected function messageWork(MessageInterface &$message, callable|\Closure $worker): bool
     {
-        if (!empty($message->ttl) && strtotime($message->ttl) > time()) {
-            throw new DeadLetterQueueException("It was not processed because the last processing date has passed!");
-        }
-        $message->try = $message->try + 1;
-        $message->attempt_at = date("c");
+        try {
+            if (!empty($message->ttl) && strtotime($message->ttl) > time()) {
+                throw new DeadLetterQueueException("It was not processed because the last processing date has passed!");
+            }
+            $message->try = $message->try + 1;
+            $message->attempt_at = date("c");
 
-        if ($message instanceof JobMessageInterface) {
-            $worker = [$message, 'worker'];
-        }
+            if ($message instanceof JobMessageInterface) {
+                $worker = [$message, 'worker'];
+            }
 
-        return (bool)(call_user_func_array($worker, [
-            $message,
-        ]));
+            return (bool)(call_user_func_array($worker, [
+                $message,
+            ]));
+        } catch (\Throwable $e) {
+            if ($message instanceof JobMessageInterface) {
+                $message->report($e);
+            }
+            throw $e;
+        }
     }
 
 }

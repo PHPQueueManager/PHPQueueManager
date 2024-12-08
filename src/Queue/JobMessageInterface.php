@@ -15,4 +15,10 @@ interface JobMessageInterface extends MessageInterface
      */
     public function worker(MessageInterface $message): bool;
 
+    /**
+     * @param \Throwable $exception
+     * @return void
+     */
+    public function report(\Throwable $exception): void;
+
 }

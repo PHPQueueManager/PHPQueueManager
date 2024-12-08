@@ -57,9 +57,20 @@ class Queue implements QueueInterface
      */
     public function consume(\Closure $worker): void
     {
-        $this->adapter
-            ->queueDeclare($this)
-            ->consume($worker);
+        try {
+            $this->adapter
+                ->queueDeclare($this)
+                ->consume($worker);
+        } catch (\Throwable $e) {
+            $this->report($e);
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function report(\Throwable $exception): void
+    {
     }
 
 }

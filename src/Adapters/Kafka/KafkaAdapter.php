@@ -102,9 +102,11 @@ class KafkaAdapter extends AbstractAdapter implements AdapterInterface
                     } catch (ReTryQueueException $e) {
                         $message->error = $e->getMessage();
                         $this->retry($message);
+                        $this->queue->report($e);
                     } catch (DeadLetterQueueException $e) {
                         $message->error = $e->getMessage();
                         $this->addDeadLetterQueue($message);
+                        $this->queue->report($e);
                     } catch (\Throwable $e) {
                         $message->error = $e->getMessage();
                         if ($message->try < $message->attempt) {
@@ -112,6 +114,7 @@ class KafkaAdapter extends AbstractAdapter implements AdapterInterface
                         } else {
                             $this->addDeadLetterQueue($message);
                         }
+                        $this->queue->report($e);
                     }
                 }
 
@@ -128,6 +131,7 @@ class KafkaAdapter extends AbstractAdapter implements AdapterInterface
                 throw new \Exception($msg->errstr(), $msg->err);
             }
         }catch (\Throwable $e) {
+            throw $e;
         }
     }
 

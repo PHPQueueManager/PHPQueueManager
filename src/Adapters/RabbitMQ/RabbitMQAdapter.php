@@ -109,10 +109,12 @@ class RabbitMQAdapter extends AbstractAdapter implements AdapterInterface
                     $message->error = $e->getMessage();
                     $this->channel->basic_nack($msg->delivery_info['delivery_tag']);
                     $this->retry($message);
+                    $this->queue->report($e);
                 } catch (DeadLetterQueueException $e) {
                     $message->error = $e->getMessage();
                     $this->channel->basic_nack($msg->delivery_info['delivery_tag']);
                     $this->addDeadLetterQueue($message);
+                    $this->queue->report($e);
                 } catch (\Throwable $e) {
                     $message->error = $e->getMessage();
                     $this->channel->basic_nack($msg->delivery_info['delivery_tag']);
@@ -121,6 +123,7 @@ class RabbitMQAdapter extends AbstractAdapter implements AdapterInterface
                     } else {
                         $this->addDeadLetterQueue($message);
                     }
+                    $this->queue->report($e);
                 }
             });
 
@@ -128,6 +131,7 @@ class RabbitMQAdapter extends AbstractAdapter implements AdapterInterface
                 $this->channel->wait();
             }
         } catch (\Throwable $e) {
+            throw $e;
         }
     }
 

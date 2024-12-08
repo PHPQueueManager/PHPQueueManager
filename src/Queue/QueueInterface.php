@@ -35,4 +35,10 @@ interface QueueInterface
      */
     public function consume(\Closure $worker): void;
 
+    /**
+     * @param \Throwable $exception
+     * @return void
+     */
+    public function report(\Throwable $exception): void;
+
 }
