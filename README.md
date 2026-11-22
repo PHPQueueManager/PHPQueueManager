@@ -1,5 +1,11 @@
 # PHP Queue Manager
 
+> [!IMPORTANT]
+> **PHP Queue Manager has passed its mission and vision on to [BabelQueue](https://github.com/BabelQueue).**
+> This repository stays online for reference and existing installations; new development, feature requests and discussions continue under BabelQueue — one language-neutral JSON envelope that PHP, Go, Python, Java, .NET and Node can all produce and consume.
+>
+> 🌐 [babelqueue.com](https://babelqueue.com) · 🏛️ [github.com/BabelQueue](https://github.com/BabelQueue) · 🐘 [PHP core](https://github.com/BabelQueue/php-sdk) · 🧩 [Laravel](https://github.com/BabelQueue/laravel) · 🎼 [Symfony](https://github.com/BabelQueue/symfony)
+
 This library was created to easily create and manage your own job queues. This library aims to abstract the queuing mechanisms and increase scalability. You will find an application built on this library in the [PHPQueueManager/Application](https://github.com/PHPQueueManager/Application) repo.
 
 ```
